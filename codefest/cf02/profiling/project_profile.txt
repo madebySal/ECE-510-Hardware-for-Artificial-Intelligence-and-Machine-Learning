@@ -1,1 +1,61 @@
+=== BNN Inference Profiling — ECE 510 Project (BNN Accelerator) ===
+Platform: Python 3.12, NumPy 2.x, CPU-only (no GPU)
+Architecture: [784 → 256 → 128 → 10], batch size 1, binary weights/activations {+1, -1}
+Runs: 10 forward passes per path
 
+--- cProfile: float32 path (10 runs, cumulative) ---
+
+         101 function calls in 0.001 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       10    0.000    0.000    0.001    0.000 bnn_inference.py:64(bnn_forward_float)
+       30    0.001    0.000    0.001    0.000 bnn_inference.py:38(bnn_layer_float)
+       20    0.000    0.000    0.000    0.000 bnn_inference.py:55(sign)
+       20    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray'}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler'}
+       20    0.000    0.000    0.000    0.000 numpy._core.multiarray.where
+
+--- cProfile: XNOR-popcount path (10 runs, cumulative) ---
+
+         156711 function calls in 0.136 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       10    0.000    0.000    0.136    0.014 bnn_inference.py:70(bnn_forward_xnor)
+       30    0.019    0.001    0.135    0.005 bnn_inference.py:42(bnn_layer_xnor)   ← DOMINANT KERNEL
+     3940    0.009    0.000    0.081    0.000 bnn_inference.py:27(xnor_popcount)
+     3940    0.007    0.000    0.072    0.000 {built-in method builtins.sum}
+    42540    0.032    0.000    0.065    0.000 bnn_inference.py:34(<genexpr>)         ← popcount loop
+     3970    0.025    0.000    0.035    0.000 bnn_inference.py:17(pack_bits)
+    38600    0.023    0.000    0.023    0.000 {method 'count' of 'str'}
+    38600    0.010    0.000    0.010    0.000 {built-in method builtins.bin}
+     4000    0.004    0.000    0.004    0.000 {method 'astype' of 'numpy.ndarray'}
+     3970    0.003    0.000    0.003    0.000 {method 'view' of 'numpy.ndarray'}
+     7910    0.001    0.000    0.001    0.000 {built-in method builtins.len}
+     2570    0.001    0.000    0.001    0.000 {built-in method numpy.zeros}
+     3970    0.001    0.000    0.001    0.000 numpy._core.multiarray.packbits
+     2570    0.000    0.000    0.000    0.000 numpy._core.multiarray.concatenate
+
+--- Wall-clock timing (10 runs each) ---
+
+Float path   — median: 0.060 ms,  min: 0.058 ms  (per forward pass)
+XNOR path    — median: 6.651 ms,  min: 6.542 ms  (per forward pass)
+
+NOTE: The Python XNOR-popcount path is slow because it emulates bit-parallel operations
+using Python-level loops. In actual hardware, each XNOR-popcount operation for one
+output neuron is a single-cycle operation over 784 bits — the hardware path is
+what this project intends to accelerate.
+
+--- Dominant kernel identification ---
+
+The dominant kernel is bnn_layer_xnor (bnn_inference.py:42), accounting for 99.3%
+of total XNOR-path runtime (0.135 s out of 0.136 s). Within that function,
+the xnor_popcount inner loop (bnn_inference.py:27) consumes 59.6% of total runtime.
+
+In hardware, this kernel maps to: for each output neuron, compute XNOR of input
+activation bits and weight bits, then popcount the result. This is a
+bit-parallel operation requiring 1 clock cycle per neuron on a sufficiently
+wide datapath — the exact operation this accelerator targets.
