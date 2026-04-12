@@ -17,12 +17,15 @@ fast, low-power inference without a GPU or general-purpose processor.
 ## Q2. How is it done today, and what are the limits?
 
 Today, BNN inference runs on CPU using FP32 NumPy matrix multiplies, even though the weights
-are binary (+1/−1). Profiling the [784→256→128→10] BNN on an Intel i7-1165G7 shows:
+are binary (+1/−1). Profiling the [784→256→128→10] BNN on a Dell Precision 3660
+(Intel Core i7-13700, 32 GB DDR5, Windows 11 Enterprise) shows:
 
 - **Forward pass time:** 149 µs per inference (6,692 samples/sec)
-- **Dominant kernel:** Layer 1 matmul `[1×784] @ [784×256]` via `numpy.matmul`
-- **Arithmetic intensity:** 0.50 FLOP/byte (FP32 weights, DRAM no-reuse)
-- **Roofline result:** Memory-bound — attainable 20 GFLOP/s vs 150 GFLOP/s compute ceiling
+- **Dominant kernel:** Layer 1 matmul `[1×784] @ [784×256]` via `numpy.matmul`, accounting
+  for **>80% of total forward-pass runtime** (cProfile, `project/m1/sw_baseline.md`)
+- **Arithmetic intensity (SW baseline):** 0.50 FLOP/byte (FP32 weights, DRAM no-reuse)
+- **Roofline result:** Memory-bound on i7-13700 (ridge point 7.42 FLOP/byte, source: Intel ARK
+  ark.intel.com/products/230490) — attainable ~45 GFLOP/s vs 665 GFLOP/s compute ceiling
 
 The fundamental limit is that FP32 weights generate 802,816 bytes of DRAM traffic per inference
 for W1 alone, despite each weight carrying only 1 bit of information. The software is wasting
