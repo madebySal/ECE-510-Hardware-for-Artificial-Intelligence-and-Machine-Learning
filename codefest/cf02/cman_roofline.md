@@ -55,6 +55,11 @@ AI = 2,147,483,648 / 12,582,912 = **170.67 FLOP/byte**
 **Attainable performance:**  
 min(10,000, 320 × 170.67) = min(10,000, 54,614) = **10,000 GFLOP/s** (hits compute ceiling)
 
+**(c) Architectural change:** GEMM is compute-bound, so the bottleneck is FLOP/s throughput.
+The highest-impact change is adding more parallel MAC units — a systolic array or wider SIMD
+execution units. Increasing memory bandwidth would have no effect here since the kernel
+already sits well above the ridge point.
+
 
 ---
 
@@ -76,3 +81,9 @@ AI = 4,194,304 / 50,331,648 = **0.0833 FLOP/byte**
 
 **Attainable performance:**  
 min(10,000, 320 × 0.0833) = min(10,000, 26.67) = **26.67 GFLOP/s**
+
+**(c) Architectural change:** Vector-add is memory-bound, so the bottleneck is DRAM bandwidth.
+The highest-impact change is reducing memory traffic through cache blocking/tiling so that
+operands are reused from on-chip SRAM rather than reloaded from DRAM each time. Switching
+to HBM would also raise the bandwidth ceiling. Adding more compute units would have no
+effect since the kernel is already starved for data, not compute.
