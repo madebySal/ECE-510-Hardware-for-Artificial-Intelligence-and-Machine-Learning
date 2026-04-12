@@ -7,11 +7,12 @@
 
 | Field | Value |
 |-------|-------|
-| CPU | Intel Core i7-1165G7 @ 2.80 GHz (4 cores, 8 threads, Tiger Lake) |
-| RAM | 16 GB DDR4-3200 dual-channel |
-| OS | Windows 11 Home (Build 26200) |
-| Python | 3.12 |
-| NumPy | 1.26 |
+| Machine | Dell Precision 3660 (CAD37.ds.cecs.pdx.edu) |
+| CPU | 13th Gen Intel Core i7-13700 (2.10 GHz base, 5.20 GHz boost, 16 cores / 24 threads) |
+| RAM | 32.0 GB DDR5 @ 4400 MT/s |
+| OS | Windows 11 Enterprise, Version 24H2, Build 26100.8037 |
+| Python | 3.14.0 |
+| NumPy | 2.4.4 |
 | PyTorch | 2.2.0 (CPU only, used for ResNet-18 comparison) |
 | Batch size | 1 (single-sample inference) |
 
@@ -35,7 +36,8 @@
 ## Dominant Kernel
 
 The dominant kernel is the Layer 1 matrix multiply `[1×784] @ [784×256]` implemented via
-`numpy.matmul`. This operation accounts for the largest share of compute (FLOPs and memory
+`numpy.matmul`, accounting for **>80% of total forward-pass runtime** (cProfile).
+This operation accounts for the largest share of compute (FLOPs and memory
 traffic) in the forward pass. See `codefest/cf02/analysis/ai_calculation.md` for full details.
 
 ---
