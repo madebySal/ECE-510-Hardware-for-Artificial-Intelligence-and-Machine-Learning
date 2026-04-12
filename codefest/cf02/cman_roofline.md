@@ -55,9 +55,6 @@ AI = 2,147,483,648 / 12,582,912 = **170.67 FLOP/byte**
 **Attainable performance:**  
 min(10,000, 320 × 170.67) = min(10,000, 54,614) = **10,000 GFLOP/s** (hits compute ceiling)
 
-**Architectural recommendation:** GEMM is compute-bound — the bottleneck is ALU throughput.
-Adding more FP32 compute units (wider SIMD, tensor cores) would improve performance; adding
-memory bandwidth would not.
 
 ---
 
@@ -79,7 +76,3 @@ AI = 4,194,304 / 50,331,648 = **0.0833 FLOP/byte**
 
 **Attainable performance:**  
 min(10,000, 320 × 0.0833) = min(10,000, 26.67) = **26.67 GFLOP/s**
-
-**Architectural recommendation:** Vector-add is deeply memory-bound — adding more compute units
-does nothing. The only impactful change is higher memory bandwidth (e.g., HBM) or eliminating
-DRAM traffic via near-memory / in-memory computation.
