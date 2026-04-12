@@ -9,7 +9,7 @@
 ---
 
 ## Roofline diagram
-
+![Roofline Plot](image.jpg)
 ```
 y: GFLOP/s (log)
 |
