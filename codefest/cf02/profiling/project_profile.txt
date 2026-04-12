@@ -1,0 +1,26 @@
+ECE 510 - CF02 Project Profiling Output
+Project: BNN Inference Accelerator [784->256->128->10]
+Platform: Intel Core i7-1165G7 @ 2.80GHz, 16 GB DDR4
+Framework: NumPy 1.26, Python 3.12, batch_size=1, dtype=float32
+Runs: 20 forward passes
+============================================================
+Time per forward pass : 149.42 us
+Throughput            : 6692.5 samples/sec
+Peak memory           : 6.4 KB
+============================================================
+cProfile - cumulative top-15
+============================================================
+         141 function calls in 0.001 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.001    0.000    0.001    0.000 <string>:10(bnn_forward)
+       60    0.000    0.000    0.000    0.000 <string>:9(binarize)
+       60    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+
+Dominant kernel: numpy matmul (x @ W1) in bnn_forward
+Layer 1 matmul [1x784] @ [784x256] accounts for largest share of runtime.
