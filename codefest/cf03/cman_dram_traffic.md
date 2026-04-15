@@ -10,7 +10,7 @@ For each output element C[i][j]:
 
 $$C[i][j] = \sum_{k=0}^{N-1} A[i][k] \cdot B[k][j]$$
 
-Each element B[k][j] is accessed once per row i of C → **each element of B is accessed N = 32 times**.
+Each element B[k][j] is needed for every row i of C → **each element of B is accessed N = 32 times**.
 
 | Matrix | Access pattern | Total element accesses |
 |--------|---------------|----------------------|
@@ -27,26 +27,26 @@ $$\text{Naive Traffic} = 2 \times N^3 \times 4\ \text{bytes} = 2 \times 32{,}768
 
 The computation is blocked into T×T = 8×8 tiles. Tiles per dimension: N/T = 32/8 = 4.
 
-For each of the $(N/T)^2 = 16$ output tiles of C, we step through N/T = 4 tile pairs. Each step loads one T×T tile of A and one T×T tile of B from DRAM.
+For each of the $(N/T)^2 = 16$ output tiles of C, we step through N/T = 4 tile pairs along the K dimension. At each step, one T×T tile of A and one T×T tile of B are loaded from DRAM into shared memory and reused T times before the next fetch.
 
-**DRAM tile loads:**
+**Total elements loaded from DRAM:**
 
-| Matrix | Number of tile loads | Elements per tile | Total elements loaded | Bytes |
-|--------|---------------------|-------------------|-----------------------|-------|
-| A | $(N/T)^2 \times (N/T) = (N/T)^3 = 4^3$... = $N^3/T^2$ loads × $T^2$ elem = $N^3/T$ | $T^2 = 64$ | $N^3/T = 4{,}096$ | $16{,}384$ |
-| B | same | $T^2 = 64$ | $N^3/T = 4{,}096$ | $16{,}384$ |
+| Matrix | Tile steps per output tile | Output tiles | Total elements | Bytes |
+|--------|---------------------------|--------------|----------------|-------|
+| A | $N/T = 4$ | $(N/T)^2 = 16$ | $N^3/T = 4{,}096$ | $16{,}384$ |
+| B | $N/T = 4$ | $(N/T)^2 = 16$ | $N^3/T = 4{,}096$ | $16{,}384$ |
 
-$$\text{Tiled Traffic} = 2 \times \frac{N^3}{T} \times 4\ \text{bytes} = 2 \times \frac{32{,}768}{8} \times 4 = \boxed{32{,}768\ \text{bytes} = 32\ \text{KB}}$$
+$$\text{Tiled Traffic} = 2 \times \frac{N^3}{T} \times 4\ \text{bytes} = 2 \times 4{,}096 \times 4 = \boxed{32{,}768\ \text{bytes} = 32\ \text{KB}}$$
 
 ---
 
 ## Task 3: Ratio of Naive to Tiled Traffic
 
-$$\text{Ratio} = \frac{2N^3 \times 4}{2(N^3/T) \times 4} = \boxed{\frac{N}{T} = \frac{32}{8} = 4\times}$$
+$$\text{Ratio} = \frac{2N^3 \times 4}{2(N^3/T) \times 4} = \frac{N^3}{N^3/T} = \boxed{T = 8\times}$$
 
 **One-sentence explanation:**
 
-> Tiling reuses each loaded T×T tile T times within on-chip shared memory before fetching the next tile from DRAM, reducing total DRAM traffic by exactly a factor of T, so the naive-to-tiled ratio is N/T.
+> Each T×T tile of A and B is loaded from DRAM once and reused T times across the T dot-product steps within the tile, so total DRAM traffic drops by exactly a factor of T.
 
 ---
 
@@ -74,7 +74,7 @@ $$t_{\text{memory}} = \frac{32{,}768}{320 \times 10^9} \approx 102\ \text{ns}$$
 
 | Metric | Naive | Tiled (T=8) | Improvement |
 |--------|-------|-------------|-------------|
-| DRAM traffic | 256 KB | 32 KB | 4× (= N/T) |
+| DRAM traffic | 256 KB | 32 KB | 8× = T |
 | Memory time | ~819 ns | ~102 ns | 8× |
 | Compute time | ~6.6 ns | ~6.6 ns | 1× |
 | Bottleneck | Memory-bound | Memory-bound (closer to ridge) | — |
