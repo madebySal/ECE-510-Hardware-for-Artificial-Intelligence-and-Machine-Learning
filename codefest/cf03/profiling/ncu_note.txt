@@ -1,0 +1,26 @@
+Nsight Compute Profiling — GTX 1650, CUDA 12.4
+
+ncu command attempted:
+  ncu --metrics sm__throughput.avg.pct_of_peak_sustained_elapsed,dram__throughput.avg.pct_of_peak_sustained_elapsed ./gemm_naive.exe
+
+Result:
+  ERR_NVGPUCTRPERM — GPU performance counters require elevated privileges on Windows.
+  This is a known Windows driver restriction; admin-level access is required to enable
+  hardware performance counter sampling.
+
+Kernel timing measured directly via cudaEventRecord (10-run average):
+
+  gemm_naive  (1024x1024 FP32, one thread per output element)
+    Avg time  : 9.866 ms
+    Throughput: 217.65 GFLOP/s
+    AI (theoretical): 0.25 FLOP/byte  → memory-bound region of roofline
+
+  gemm_tiled  (1024x1024 FP32, shared-memory tile size T=8)
+    Avg time  : 10.318 ms
+    Throughput: 208.13 GFLOP/s
+    AI (theoretical): 4.0 FLOP/byte   → memory-bound region of roofline
+
+GTX 1650 hardware ceilings used for roofline:
+  Peak FP32 compute : 2984 GFLOP/s
+  Peak DRAM BW      : 128 GB/s
+  Ridge point       : ~23.3 FLOP/byte
