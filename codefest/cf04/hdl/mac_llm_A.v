@@ -3,18 +3,18 @@
 // Prompt: MAC module — clk, rst (active-high sync), a/b 8-bit signed, out 32-bit signed accumulator
 
 module mac (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic [7:0]  a,      // BUG: missing 'signed' keyword — multiplication is unsigned
-    input  logic [7:0]  b,      // BUG: missing 'signed' keyword — multiplication is unsigned
-    output logic [31:0] out     // BUG: missing 'signed' — sign semantics lost at port boundary
+    input  logic              clk,
+    input  logic              rst,
+    input  logic signed [7:0] a,
+    input  logic signed [7:0] b,
+    output logic signed [31:0] out
 );
 
     always_ff @(posedge clk) begin
         if (rst)
-            out <= 32'd0;
+            out <= '0;
         else
-            out <= out + (a * b); // BUG: a*b is 16-bit unsigned; no sign extension to 32 bits
+            out <= out + 32'(signed'(a)) * 32'(signed'(b));
     end
 
 endmodule

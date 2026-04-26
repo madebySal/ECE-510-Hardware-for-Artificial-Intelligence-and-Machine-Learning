@@ -4,16 +4,16 @@
 | File | Model |
 |------|-------|
 | mac_llm_A.v | Claude Sonnet 4.6 |
-| mac_llm_B.v | GPT-4o (gpt-4o-2024-11-20) |
+| mac_llm_B.v | ChatGPT 5.3 |
 
 ---
 
 ## Compilation Results
 
 ```
-iverilog -g2012 -o mac_a mac_llm_A.v mac_tb.v   → exit 0 (no errors)
-iverilog -g2012 -o mac_b mac_llm_B.v mac_tb.v   → exit 0 (no errors)
-iverilog -g2012 -o mac_c mac_correct.v mac_tb.v  → exit 0 (no errors)
+iverilog -g2012 mac_llm_A.v mac_tb.v   → exit 0 (no errors)
+iverilog -g2012 mac_llm_B.v mac_tb.v   → exit 0 (no errors)
+iverilog -g2012 mac_correct.v mac_tb.v → exit 0 (no errors)
 ```
 
 ---
@@ -26,20 +26,14 @@ PASS cyc1: out=12
 PASS cyc2: out=24
 PASS cyc3: out=36
 PASS reset: out=0
-FAIL neg_cyc1: got 502 expected -10
-FAIL neg_cyc2: got 1004 expected -20
-```
-
-### mac_llm_B (GPT-4o)
-```
-MAC reset          ← $display fires (non-synthesizable)
-PASS cyc1: out=12
-...
 PASS neg_cyc1: out=-10
 PASS neg_cyc2: out=-20
+PASS large_cyc1: out=10000
+PASS large_cyc2: out=20000
+PASS large_cyc3: out=30000
 ```
 
-### mac_correct
+### mac_llm_B (ChatGPT 5.3)
 ```
 PASS cyc1: out=12
 PASS cyc2: out=24
@@ -47,89 +41,113 @@ PASS cyc3: out=36
 PASS reset: out=0
 PASS neg_cyc1: out=-10
 PASS neg_cyc2: out=-20
+PASS large_cyc1: out=10000
+PASS large_cyc2: out=20000
+PASS large_cyc3: out=30000
+```
+
+### mac_correct
+```
+PASS cyc1: out=12  ...  PASS large_cyc3: out=30000  (all 9 PASS)
 ```
 
 ---
 
-## Issue 1 — Missing `signed` on port declarations (mac_llm_A.v)
+## Issue 1 — Tool-dependent expression width in `mult = a * b` (mac_llm_B.v)
 
 **Offending lines:**
-```verilog
-input  logic [7:0]  a,
-input  logic [7:0]  b,
-output logic [31:0] out
-```
-
-**Why it's wrong:** Without `signed`, `a` and `b` are treated as unsigned logic vectors.
-The expression `a * b` is therefore an unsigned 16-bit multiply. When `a = -5` (8'hFB = 251)
-and `b = 2`, the result is 502 instead of -10. The bug only surfaces on negative inputs —
-positive tests pass, giving false confidence.
-
-**Corrected version:**
 ```systemverilog
-input  logic signed [7:0]  a,
-input  logic signed [7:0]  b,
-output logic signed [31:0] out
-```
+logic signed [15:0] mult;
 
----
-
-## Issue 2 — No explicit sign extension on the product (mac_llm_A.v, mac_llm_B.v)
-
-**Offending lines:**
-```verilog
-out <= out + (a * b);   // mac_llm_A
-out <= out + a * b;     // mac_llm_B
-```
-
-**Why it's wrong:** `a * b` produces a 16-bit result. Adding it to a 32-bit accumulator
-without an explicit cast relies on implicit sign extension rules that vary by tool and
-synthesis target. In mac_llm_A this is moot (ports are unsigned anyway), but in mac_llm_B
-it is an unguarded assumption. The safe, portable form casts the product explicitly.
-
-**Corrected version:**
-```systemverilog
-out <= out + (32'(signed'(a)) * 32'(signed'(b)));
-```
-Widen both operands to 32 bits *before* multiplying. In SystemVerilog, `a * b` where both
-are `[7:0]` produces only an 8-bit result (max of operand widths). The cast-after pattern
-`32'(signed'(a * b))` sign-extends the already-truncated 8-bit product — which is wrong
-for operands like 127×127 = 16129 that do not fit in 8 bits.
-
-**Simulation evidence:** With the cast-before fix, `a=127, b=127` accumulates 16129 per cycle
-and wraps at cycle 133145. With cast-after, the 8-bit product truncates to 1 and the
-accumulator simply counts cycles.
-
----
-
-## Issue 3 — Non-synthesizable constructs (mac_llm_B.v)
-
-**Offending lines:**
-```verilog
-always @(posedge clk) begin   // should be always_ff
-    $display("MAC reset");    // non-synthesizable
-end
-
-initial begin                 // non-synthesizable
-    out = 32'sd0;
+always_comb begin
+    mult = a * b;
 end
 ```
 
-**Why it's wrong:**
-- `always @(posedge clk)` is a behavioral construct; synthesis tools prefer (and lint tools
-  require) `always_ff` for clocked registers so they can flag sensitivity-list errors.
-- `$display` is a simulation-only system task; it will either be ignored or cause a synthesis
-  error depending on the tool.
-- `initial` blocks are not supported in most synthesis flows (exception: FPGA BRAM init).
-  Using `initial` for reset is incorrect — reset must be done via the synchronous `if (rst)` path.
+**Why it is ambiguous:** The expression `a * b` where both operands are `logic signed [7:0]`
+has a *self-determined* width of 8 bits under strict IEEE 1800 rules. When assigned to
+`logic signed [15:0] mult`, some tools (including Icarus with `-g2012`) extend the context
+to 16 bits and evaluate the multiplication at full precision — so the code passes in
+simulation. However, other synthesis tools (e.g., Synopsys DC, Quartus) may evaluate
+`a * b` in 8-bit self-determined context first, truncate the product, and then sign-extend
+the truncated 8-bit result into `mult`. For `a = 100, b = 100`, the 8-bit truncated product
+is 16 (100×100 = 10000, 10000 mod 256 = 16), not 10000 — a silent correctness failure
+that only surfaces on large operands. The code passes simulation on Icarus but is not
+portably correct.
 
 **Corrected version:**
+```systemverilog
+always_comb begin
+    mult = 16'(signed'(a)) * 16'(signed'(b));
+end
+```
+Explicit casts widen `a` and `b` to 16 bits *before* the multiply, making the operation
+unambiguous across all tools.
+
+---
+
+## Issue 2 — Unnecessary `always_comb` block (mac_llm_B.v)
+
+**Offending lines:**
+```systemverilog
+logic signed [15:0] mult;
+
+always_comb begin
+    mult = a * b;
+end
+
+always_ff @(posedge clk) begin
+    ...
+    out <= out + mult;
+end
+```
+
+**Why it is problematic:** The spec requires `always_ff` for the sequential logic and says
+nothing about a combinational intermediate. Splitting the multiply into a separate
+`always_comb` block adds an extra net (`mult`) and process, which:
+- Creates an additional fanout path the synthesizer must analyze for timing closure.
+- Obscures the intent: the multiply exists only to feed the accumulator, so it belongs
+  inline in the `always_ff` block.
+- Introduces a combinational glitch window on `mult` between clock edges that, while
+  harmless here, is a design pattern to avoid in critical paths.
+
+**Corrected version (inline multiply, no intermediate):**
 ```systemverilog
 always_ff @(posedge clk) begin
     if (rst)
         out <= 32'sd0;
     else
-        out <= out + 32'(signed'(a * b));
+        out <= out + 32'(signed'(a)) * 32'(signed'(b));
 end
-// remove initial block entirely
 ```
+
+---
+
+## Issue 3 — Implicit sign extension from 16-bit `mult` to 32-bit `out` (mac_llm_B.v)
+
+**Offending line:**
+```systemverilog
+out <= out + mult;
+```
+
+**Why it is ambiguous:** `out` is `signed [31:0]` and `mult` is `signed [15:0]`. The addition
+requires `mult` to be sign-extended to 32 bits. In Icarus this works correctly because both
+signals are declared `signed`. However, mixing operand widths in accumulations without
+explicit extension is a common source of synthesis mismatches: if `mult` were inadvertently
+declared without `signed`, the zero-extension would silently produce wrong results for
+negative products. Explicit casting makes intent clear and is safer across tools.
+
+**Corrected version:**
+```systemverilog
+out <= out + 32'(signed'(mult));
+```
+
+---
+
+## Summary
+
+| File | Issues | Testbench result |
+|------|--------|-----------------|
+| mac_llm_A.v (Claude Sonnet 4.6) | None | All 9 PASS |
+| mac_llm_B.v (ChatGPT 5.3) | 3 (portability, style, implicit extension) | All 9 PASS on Icarus; may fail on other tools |
+| mac_correct.v | — | All 9 PASS |

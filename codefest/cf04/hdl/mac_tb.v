@@ -46,6 +46,17 @@ module mac_tb;
         check(-10, "neg_cyc1");
         check(-20, "neg_cyc2");
 
+        // Reset again
+        rst = 1; @(posedge clk); #1; rst = 0;
+
+        // Large values: a=100, b=100 — product=10000, exceeds 8-bit range
+        // Correct: 10000, 20000, 30000
+        // Buggy (8-bit truncation): 100*100 mod 256 = 16 → 16, 32, 48
+        a = 100; b = 100;
+        check(10000, "large_cyc1");
+        check(20000, "large_cyc2");
+        check(30000, "large_cyc3");
+
         $display("Testbench complete");
         $finish;
     end
