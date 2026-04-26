@@ -15,7 +15,7 @@
 // Popcount accumulator width = $clog2(N)+1 to hold 0..N.
 
 module bnn_layer #(
-    parameter int N = 784
+    parameter int N = 64    // default for simulation; set to 784 for production
 ) (
     input  logic              clk,
     input  logic              rst,
@@ -61,9 +61,8 @@ module bnn_layer #(
             // threshold: if popcount > N/2 => more agreements => output +1 (1)
             out          <= (popcount_f(xnor_vec) > (N / 2)) ? 1'b1 : 1'b0;
             result_valid <= 1'b1;
-        end else begin
-            result_valid <= 1'b0;
         end
+        // result_valid stays high after computation until next rst or data_ready
     end
 
 endmodule

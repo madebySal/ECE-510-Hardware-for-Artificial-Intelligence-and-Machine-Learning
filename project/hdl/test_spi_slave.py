@@ -1,128 +1,105 @@
-"""cocotb testbench for spi_slave.sv — exercises write + read transactions."""
+"""cocotb testbench for spi_slave.sv — burst protocol (N=64 default)."""
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 
-SCK_HALF = 40   # 40 ns half-period → 12.5 MHz SCK (system clk = 10 ns)
+N         = 64
+ACT_BYTES = (N + 7) // 8   # 8
+WGT_BYTES = (N + 7) // 8   # 8
+SCK_HALF  = 40              # ns — 12.5 MHz SCK
 
 
-async def spi_transaction(dut, wr: bool, addr: int, data: int = 0) -> int:
-    """Drive one 16-bit SPI frame.  Returns the 8 MISO bits received."""
-    cmd_byte = (0x80 | (addr & 0x7F)) if wr else (addr & 0x7F)
-    frame = (cmd_byte << 8) | (data & 0xFF)
+async def spi_burst(dut, wr: bool, addr: int, data_bytes: list) -> list:
+    """Burst SPI frame: CMD byte + data_bytes.  Returns received bytes."""
+    cmd   = (0x80 | (addr & 0x7F)) if wr else (addr & 0x7F)
+    frame = [cmd] + list(data_bytes)
 
     dut.cs_n.value = 0
     await Timer(SCK_HALF, unit="ns")
 
-    rx_byte = 0
-    for bit in range(15, -1, -1):
-        dut.mosi.value = (frame >> bit) & 1
-        await Timer(SCK_HALF, unit="ns")
-        dut.sck.value = 1
-        await Timer(SCK_HALF, unit="ns")
-        rx_byte = (rx_byte << 1) | int(dut.miso.value)
-        dut.sck.value = 0
-        await Timer(SCK_HALF, unit="ns")
+    rx_bytes = []
+    for bval in frame:
+        rx = 0
+        for bit in range(7, -1, -1):
+            dut.mosi.value = (bval >> bit) & 1
+            await Timer(SCK_HALF, unit="ns")
+            dut.sck.value = 1
+            await Timer(SCK_HALF, unit="ns")
+            rx = (rx << 1) | int(dut.miso.value)
+            dut.sck.value = 0
+            await Timer(SCK_HALF, unit="ns")
+        rx_bytes.append(rx & 0xFF)
 
     dut.cs_n.value = 1
     dut.mosi.value = 0
-    await Timer(SCK_HALF * 4, unit="ns")   # CS guard time
-    return rx_byte & 0xFF
+    await Timer(SCK_HALF * 4, unit="ns")
+    return rx_bytes[1:]
 
 
-@cocotb.test()
-async def test_spi_write_read(dut):
-    """Write a byte to reg 0x00, then read it back."""
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-
-    dut.rst.value      = 1
-    dut.sck.value      = 0
-    dut.cs_n.value     = 1
-    dut.mosi.value     = 0
-    dut.result_in.value   = 0
+async def hw_reset(dut):
+    dut.rst.value          = 1
+    dut.sck.value          = 0
+    dut.cs_n.value         = 1
+    dut.mosi.value         = 0
+    dut.result_out.value   = 0
     dut.result_valid.value = 0
-
-    for _ in range(5):
+    for _ in range(6):
         await RisingEdge(dut.clk)
     dut.rst.value = 0
     await RisingEdge(dut.clk)
 
-    # Write 0xAB to address 0x00
-    await spi_transaction(dut, wr=True,  addr=0x00, data=0xAB)
 
-    # Read back address 0x00 — expect 0xAB
-    rx = await spi_transaction(dut, wr=False, addr=0x00)
-    assert rx == 0xAB, f"Read back 0x{rx:02X}, expected 0xAB"
-    dut._log.info(f"PASS write/read reg 0x00: got 0x{rx:02X}")
+@cocotb.test()
+async def test_burst_write_read(dut):
+    """Burst-write 4 bytes starting at addr 0x00, read them back."""
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await hw_reset(dut)
+
+    payload = [0xAB, 0xCD, 0xEF, 0x12]
+
+    # Write burst: CMD=0x80 (write, addr=0), then 4 bytes
+    await spi_burst(dut, wr=True, addr=0x00, data_bytes=payload)
+
+    # Read burst: CMD=0x00 (read, addr=0), 4 dummy bytes → get stored values
+    rx = await spi_burst(dut, wr=False, addr=0x00, data_bytes=[0]*4)
+
+    assert rx == payload, f"Read back {[hex(b) for b in rx]}, expected {[hex(b) for b in payload]}"
+    dut._log.info(f"PASS burst write/read: {[hex(b) for b in rx]}")
 
 
 @cocotb.test()
-async def test_spi_act_strobe(dut):
-    """Write ACT_LO then ACT_HI; verify act_strobe pulses and act_out is correct."""
+async def test_act_wgt_unpack(dut):
+    """Write 8 activation bytes; verify act_out assembles correctly."""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await hw_reset(dut)
 
-    dut.rst.value      = 1
-    dut.sck.value      = 0
-    dut.cs_n.value     = 1
-    dut.mosi.value     = 0
-    dut.result_in.value   = 0
-    dut.result_valid.value = 0
+    act_val = 0xDEAD_BEEF_CAFE_1234
+    act_bytes = [(act_val >> (i * 8)) & 0xFF for i in range(ACT_BYTES)]
 
-    for _ in range(5):
-        await RisingEdge(dut.clk)
-    dut.rst.value = 0
-    await RisingEdge(dut.clk)
+    await spi_burst(dut, wr=True, addr=0x00, data_bytes=act_bytes)
 
-    # Write ACT_LO = 0x34
-    await spi_transaction(dut, wr=True, addr=0x00, data=0x34)
-
-    # Write ACT_HI = 0x12 — should pulse act_strobe and set act_out = 0x1234
-    strobe_seen = False
-    cocotb.start_soon(_watch_strobe(dut, lambda: globals().update(strobe_seen=True)))
-    await spi_transaction(dut, wr=True, addr=0x01, data=0x12)
-
-    # Sample act_strobe a few cycles after CS deassert
+    # Allow register writes to propagate
     for _ in range(4):
         await RisingEdge(dut.clk)
-        if dut.act_strobe.value == 1:
-            strobe_seen = True
-            break
 
-    assert strobe_seen or True, "act_strobe did not pulse"  # best-effort
-    act = int(dut.act_out.value)
-    assert act == 0x1234, f"act_out = 0x{act:04X}, expected 0x1234"
-    dut._log.info(f"PASS act_strobe: act_out=0x{act:04X}")
-
-
-async def _watch_strobe(dut, cb):
-    for _ in range(50):
-        await RisingEdge(dut.clk)
-        if dut.act_strobe.value == 1:
-            cb()
-            return
+    got = int(dut.act_out.value)
+    assert got == act_val, f"act_out=0x{got:016X}, expected=0x{act_val:016X}"
+    dut._log.info(f"PASS act_wgt_unpack: act_out=0x{got:016X}")
 
 
 @cocotb.test()
-async def test_spi_result_read(dut):
-    """Drive result_in=0x7F, result_valid=1; read STATUS and RESULT registers."""
+async def test_result_read(dut):
+    """Drive result_in=0x01, result_valid=1; verify STATUS reg."""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await hw_reset(dut)
 
-    dut.rst.value         = 1
-    dut.sck.value         = 0
-    dut.cs_n.value        = 1
-    dut.mosi.value        = 0
-    dut.result_in.value   = 0x7F
+    dut.result_out.value   = 0x01
     dut.result_valid.value = 1
-
-    for _ in range(5):
-        await RisingEdge(dut.clk)
-    dut.rst.value = 0
-    for _ in range(3):
+    for _ in range(4):
         await RisingEdge(dut.clk)
 
-    result_rx = await spi_transaction(dut, wr=False, addr=0x10)
-    status_rx = await spi_transaction(dut, wr=False, addr=0x11)
-
-    assert result_rx == 0x7F, f"RESULT reg got 0x{result_rx:02X}, expected 0x7F"
-    assert status_rx & 0x01, f"STATUS bit0 should be 1, got 0x{status_rx:02X}"
-    dut._log.info(f"PASS result read: RESULT=0x{result_rx:02X} STATUS=0x{status_rx:02X}")
+    rx = await spi_burst(dut, wr=False, addr=0x7F, data_bytes=[0x00])
+    status = rx[0]
+    assert status & 0x02, f"result_valid bit not set: STATUS=0x{status:02X}"
+    assert status & 0x01, f"result_out bit not set:   STATUS=0x{status:02X}"
+    dut._log.info(f"PASS result_read: STATUS=0x{status:02X}")

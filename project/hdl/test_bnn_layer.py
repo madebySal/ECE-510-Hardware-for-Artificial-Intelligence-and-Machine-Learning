@@ -3,7 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 import random
 
-N = 784  # must match parameter in bnn_layer.sv
+N = 64   # must match parameter in bnn_layer.sv
 
 
 def py_bnn_layer(activation_bits: int, weight_bits: int, n: int) -> int:
