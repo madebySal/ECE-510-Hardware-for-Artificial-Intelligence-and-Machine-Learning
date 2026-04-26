@@ -1,0 +1,43 @@
+=== Compiling mac_llm_A.v ===
+iverilog -g2012 -o mac_a mac_llm_A.v mac_tb.v
+Exit: 0 (no errors)
+
+=== Compiling mac_llm_B.v ===
+iverilog -g2012 -o mac_b mac_llm_B.v mac_tb.v
+Exit: 0 (no errors)
+
+=== Compiling mac_correct.v ===
+iverilog -g2012 -o mac_c mac_correct.v mac_tb.v
+Exit: 0 (no errors)
+
+=== Simulation: mac_llm_A ===
+VCD info: dumpfile mac_tb.vcd opened for output.
+PASS cyc1: out=12
+PASS cyc2: out=24
+PASS cyc3: out=36
+PASS reset: out=0
+FAIL neg_cyc1: got 502 expected -10
+FAIL neg_cyc2: got 1004 expected -20
+Testbench complete
+
+=== Simulation: mac_llm_B ===
+VCD info: dumpfile mac_tb.vcd opened for output.
+MAC reset
+PASS cyc1: out=12
+PASS cyc2: out=24
+PASS cyc3: out=36
+MAC reset
+PASS reset: out=0
+PASS neg_cyc1: out=-10
+PASS neg_cyc2: out=-20
+Testbench complete
+
+=== Simulation: mac_correct (all 6 PASS expected) ===
+VCD info: dumpfile mac_tb.vcd opened for output.
+PASS cyc1: out=12
+PASS cyc2: out=24
+PASS cyc3: out=36
+PASS reset: out=0
+PASS neg_cyc1: out=-10
+PASS neg_cyc2: out=-20
+Testbench complete

@@ -1,0 +1,30 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '/mnt/c/Users/saleh_fodnl/Documents/ece510/codefest/cf04/cocotb_mac'
+/usr/lib/python3.12/site-packages/cocotb_tools/makefiles/simulators/Makefile.icarus:66: Using MODULE is deprecated, please use COCOTB_TEST_MODULES instead.
+rm -f results.xml
+COCOTB_TEST_MODULES=test_mac COCOTB_TESTCASE= COCOTB_TEST_FILTER= COCOTB_TOPLEVEL=mac TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /usr/lib/python3.12/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp   
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:93   in _embed_init_python              Using Python 3.12.13 interpreter at /usr/bin/python3
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:79   in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (stable)
+     0.00ns INFO     cocotb                             Seeding Python random module with 1777209305
+     0.00ns INFO     cocotb                             Initialized cocotb v2.0.1 from /usr/lib/python3.12/site-packages/cocotb
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb                             Running tests
+     0.00ns INFO     cocotb.regression                  running test_mac.test_mac_basic (1/2)
+                                                            [a=3,b=4] x3 cycles, reset, [a=-5,b=2] x2 cycles
+    60.00ns INFO     cocotb.regression                  test_mac.test_mac_basic passed
+    60.00ns INFO     cocotb.regression                  running test_mac.test_mac_overflow (2/2)
+                                                            Accumulate until 32-bit signed overflow; documents wrap-around (no saturation).
+1331520.00ns INFO     cocotb.mac                         OVERFLOW WRAP (expected): 2147479576 -> -2147471591. Design wraps (2's complement), does NOT saturate.
+1331520.00ns INFO     cocotb.regression                  test_mac.test_mac_overflow passed
+1331520.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                         ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         **************************************************************************************
+                                                         ** test_mac.test_mac_basic        PASS          60.00           0.00      13130.67  **
+                                                         ** test_mac.test_mac_overflow     PASS     1331460.00          14.84      89733.00  **
+                                                         **************************************************************************************
+                                                         ** TESTS=2 PASS=2 FAIL=0 SKIP=0            1331520.00          14.87      89521.63  **
+                                                         **************************************************************************************
+make[1]: Leaving directory '/mnt/c/Users/saleh_fodnl/Documents/ece510/codefest/cf04/cocotb_mac'
