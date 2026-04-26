@@ -16,7 +16,7 @@ def py_bnn_layer(activation_bits: int, weight_bits: int, n: int) -> int:
 @cocotb.test()
 async def test_bnn_reset(dut):
     """Drive reset, verify result_valid is low"""
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rst.value = 1
     dut.act_valid.value = 0
     dut.weight_valid.value = 0
@@ -31,7 +31,7 @@ async def test_bnn_reset(dut):
 @cocotb.test()
 async def test_bnn_all_agree(dut):
     """All activations match weights — expect out=1 (all XNOR bits = 1, pop=N)"""
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rst.value = 1
     await RisingEdge(dut.clk)
     dut.rst.value = 0
@@ -52,7 +52,7 @@ async def test_bnn_all_agree(dut):
 @cocotb.test()
 async def test_bnn_random(dut):
     """Compare RTL against Python golden model on 5 random inputs"""
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rst.value = 1
     await RisingEdge(dut.clk)
     dut.rst.value = 0

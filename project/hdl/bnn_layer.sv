@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // BNN fully-connected layer: XNOR-popcount compute core
 // Computes one output neuron: popcount(XNOR(activation, weight_row))
 // then applies binary threshold (sign): out = (pop >= N/2) ? +1 : -1
