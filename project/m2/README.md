@@ -48,11 +48,10 @@ Produces `sim/waveform.png`.
 
 **Interface:** no change. SPI Mode 0 as selected in `project/m1/interface_selection.md`.
 
-**Module naming note:** SystemVerilog reserves the keyword `interface`, so
-`project/m2/rtl/interface.sv` declares its top module as `interface_module`.
-The SPI protocol and register map are identical to `project/hdl/spi_slave.sv`
-from M1 development; only the module name changed to satisfy the synthesizable
-naming requirement.
+**Module naming note:** SystemVerilog reserves `interface` as a keyword.
+`project/m2/rtl/interface.sv` uses the escaped identifier `\interface` (valid
+per IEEE 1800-2017 §5.6), so the top module name matches the filename exactly.
+The SPI protocol and register map are identical to `project/hdl/spi_slave.sv`.
 
 **Testbench format:** M1 development used Python/cocotb testbenches
 (`project/hdl/test_bnn_layer.py`, `project/hdl/test_spi_slave.py`).

@@ -27,7 +27,7 @@ module tb_interface;
 
     always #(CLK_HALF) clk = ~clk;
 
-    interface_module #(.N(N)) dut (
+    \interface  #(.N(N)) dut (
         .clk          (clk),
         .rst          (rst),
         .sck          (sck),

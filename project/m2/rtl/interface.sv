@@ -29,8 +29,10 @@
 // Reset: synchronous, active-high.
 // Protocol conformance: SPI Mode 0 (CPOL=0, CPHA=0). Data sampled on rising SCK,
 //   shifted out on falling SCK. Address auto-increments for burst transfers.
+// Note: module name uses escaped identifier (\interface) because 'interface' is a
+//   reserved keyword in SystemVerilog. The escaped form is valid per IEEE 1800.
 
-module interface_module #(
+module \interface #(
     parameter int N        = 64,
     parameter int ACT_BASE = 0,
     parameter int WGT_BASE = (N + 7) / 8
