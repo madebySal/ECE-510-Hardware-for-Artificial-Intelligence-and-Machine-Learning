@@ -1,0 +1,11 @@
+=== tb_compute_core start ===
+  PASS  reset: result_valid=0
+  PASS  all_agree: out=1 expected=1
+  PASS  all_disagree: out=0 expected=0
+  PASS  exactly_half: out=0 expected=0
+  PASS  representative_identical: out=1 expected=1
+  PASS  alternating_complement: out=0 expected=0
+  PASS  three_quarter_agree: out=1 expected=1
+=== Results: 6 PASS, 0 FAIL ===
+PASS
+tb/tb_compute_core.sv:131: $finish called at 156000 (1ps)

@@ -1,0 +1,7 @@
+=== tb_interface start ===
+  PASS  write_read_back: ab cd ef 12
+  PASS  act_unpack: act_out=0xdeadbeefcafe1234
+  PASS  status_reg: STATUS=0x03
+=== Results: 3 PASS, 0 FAIL ===
+PASS
+tb/tb_interface.sv:161: $finish called at 21225000 (1ps)
