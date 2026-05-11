@@ -33,6 +33,17 @@ vvp sim_iface
 
 Expected output ends with `PASS`.
 
+### Top-level integration testbench (bnn_top)
+
+```bash
+# from project/m2/
+iverilog -g2012 -o sim_top tb/tb_bnn_top.sv rtl/bnn_top.sv rtl/interface.sv rtl/compute_core.sv
+vvp sim_top
+```
+
+Runs 4 end-to-end SPI tests (all_agree, all_disagree, mixed, half_agree).
+Expected output ends with `ALL PASS`.
+
 ### Waveform
 
 ```bash
@@ -41,6 +52,16 @@ python gen_waveform.py
 ```
 
 Produces `sim/waveform.png`.
+
+### Quantization error analysis
+
+```bash
+# from project/m2/
+python sim/quantization_analysis.py
+```
+
+Runs 100 random test vectors through the reference BNN model and the hardware model.
+Produces `sim/quantization_results.csv`. Expected: MAE=0, max error=0, 100% match.
 
 ---
 
