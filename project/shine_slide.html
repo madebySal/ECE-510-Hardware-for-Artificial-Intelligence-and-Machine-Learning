@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BNN Accelerator — ECE 510 Shine Slide</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0d0f1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.slide {
+  width: 1280px;
+  min-height: 720px;
+  background: #13152a;
+  border-radius: 14px;
+  border: 1px solid #252847;
+  padding: 36px 44px 32px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+  box-shadow: 0 12px 60px rgba(0,0,0,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+/* top accent */
+.slide::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, #5c6bc0 0%, #42a5f5 50%, #26c6da 100%);
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.header-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.header-left .sub {
+  font-size: 13px;
+  color: #5c6bc0;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+.header-right {
+  text-align: right;
+  font-size: 12px;
+  color: #37474f;
+  line-height: 1.7;
+}
+
+/* ── BODY GRID ── */
+.body {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+}
+
+.card {
+  background: #0d0f1a;
+  border: 1px solid #1e2240;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #5c6bc0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #1e2240;
+}
+
+.card p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #90a4ae;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+}
+.card ul li {
+  font-size: 13px;
+  color: #90a4ae;
+  line-height: 1.6;
+  padding-left: 14px;
+  position: relative;
+}
+.card ul li::before { content: '▸'; position: absolute; left: 0; color: #5c6bc0; }
+
+strong, b { color: #e8eaf6; }
+
+/* span two rows */
+.span-col { grid-row: 1 / 3; }
+
+/* ── FLOW DIAGRAM (what we do differently) ── */
+.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.flow-box {
+  background: #1a237e;
+  border: 1px solid #3949ab;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c5cae9;
+  text-align: center;
+  width: 100%;
+}
+.flow-box.green { background: #1b3a2a; border-color: #2e7d32; color: #a5d6a7; }
+.flow-box.teal  { background: #003840; border-color: #00838f; color: #80deea; }
+.flow-arrow { color: #37474f; font-size: 16px; line-height: 1; }
+
+/* ── PROGRESS BAR ── */
+.bar-row { display: flex; flex-direction: column; gap: 6px; }
+.bar-item { }
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #78909c;
+  margin-bottom: 3px;
+}
+.bar-track {
+  height: 7px;
+  background: #1a1d2e;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #5c6bc0, #42a5f5);
+}
+.bar-fill.done { background: linear-gradient(90deg, #2e7d32, #66bb6a); }
+
+/* ── METRIC CHIPS ── */
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.chip {
+  background: #1a237e;
+  border: 1px solid #3949ab;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #c5cae9;
+  font-weight: 600;
+}
+.chip.green { background: #1b3a2a; border-color: #2e7d32; color: #a5d6a7; }
+.chip.red   { background: #3a1b1b; border-color: #c62828; color: #ef9a9a; }
+</style>
+</head>
+<body>
+<div class="slide">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>BNN Inference Accelerator &nbsp;·&nbsp; Hardware for AI/ML</h1>
+      <div class="sub">ECE 510 · Spring 2026 · Portland State University · Saleh Esmaeil</div>
+    </div>
+    <div class="header-right">
+      M2 Complete<br>
+      SystemVerilog · SPI · Icarus
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- Q1: What are you doing + Q2: Prior work  (left col, spans 2 rows) -->
+    <div class="card span-col">
+      <div class="card-label">① What &amp; Why · ② Prior Work</div>
+
+      <p><b>Algorithm:</b> Binary Neural Network (BNN) inference on MNIST
+         [784 → 256 → 128 → 10]. Weights and activations are ±1, encoded as 1 bit.</p>
+
+      <p><b>SW baseline (CPU):</b> 149 µs/inference &nbsp;·&nbsp; 6,692 samples/sec on
+         i7-13700. Dominant kernel: Layer-1 matmul <code style="font-size:12px;background:#0d0f1a;padding:1px 5px;border-radius:3px;color:#80cbc4;">[1×784]@[784×256]</code>
+         accounts for &gt;80% of runtime (FP32 NumPy — wastes 31 of every 32 bits fetched).</p>
+
+      <p><b>Prior work:</b> FINN (Xilinx, 2017) streams BNNs on FPGAs using
+         HLS-generated XNOR+popcount engines; BinaryConnect (Courbariaux 2015) shows
+         &lt;1 pp accuracy loss vs FP32 MLP on MNIST. Both target FPGAs or GPUs —
+         no lightweight MCU-interfaced ASIC-style core.</p>
+
+      <div class="flow" style="margin-top:6px">
+        <div class="flow-box">Input activation (784 bits, 1-bit packed)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box green">XNOR + Popcount (1 cycle, N=784)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box teal">Threshold → binary output bit</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-box">SPI → host MCU (6.25 MB/s, 4.5× headroom)</div>
+      </div>
+    </div>
+
+    <!-- Q3: What's different (top-center) -->
+    <div class="card">
+      <div class="card-label">③ What We Do Differently</div>
+      <ul>
+        <li><b>XNOR replaces multiply</b> — 1 gate vs ~16 in FP32</li>
+        <li><b>Popcount replaces add-tree</b> — parallel, 1 cycle for N=784</li>
+        <li><b>Zero hardware quantization error</b> — weights already binary</li>
+        <li><b>SPI interface</b> for MCU edge deployment (no PCIe/AXI overhead)</li>
+        <li><b>32× memory reduction</b> — 25 KB vs 800 KB for W1</li>
+      </ul>
+      <div class="chips" style="margin-top:auto">
+        <span class="chip green">1-bit weights</span>
+        <span class="chip green">1-cycle MAC</span>
+        <span class="chip green">MCU-ready SPI</span>
+      </div>
+    </div>
+
+    <!-- Q4: Accomplished (top-right) -->
+    <div class="card">
+      <div class="card-label">④ Accomplished So Far</div>
+      <div class="bar-row">
+        <div class="bar-item">
+          <div class="bar-label"><span>SW baseline + roofline</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label"><span>SPI interface selection</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label"><span>bnn_layer.sv (XNOR+popcount)</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label"><span>spi_slave.sv (burst protocol)</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label"><span>bnn_top.sv integration</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-label"><span>cocotb: PASS 4/4 e2e tests</span><span style="color:#66bb6a">✓</span></div>
+          <div class="bar-track"><div class="bar-fill done" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5: Next steps (bottom-right, spans both bottom cols) -->
+    <div class="card" style="grid-column: 2 / 4;">
+      <div class="card-label">⑤ Next Steps — Path to Success</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <ul>
+          <li><b>M3:</b> Full 784-neuron timing analysis &amp; synthesis estimate</li>
+          <li><b>M3:</b> Multi-neuron parallelism (256 neurons simultaneously)</li>
+          <li><b>M3:</b> Layer-2 [256→128] and output layer integration</li>
+        </ul>
+        <ul>
+          <li><b>Success =</b> ≥10,000 inferences/sec verified in simulation</li>
+          <li><b>Success =</b> &lt;2 pp accuracy gap vs FP32 BNN baseline</li>
+          <li><b>Success =</b> Full MNIST forward pass on hardware</li>
+        </ul>
+      </div>
+      <div class="chips" style="margin-top:8px">
+        <span class="chip">Target: 10k inf/sec</span>
+        <span class="chip">Accuracy gap: &lt;2 pp</span>
+        <span class="chip red">M3 in progress</span>
+      </div>
+    </div>
+
+  </div><!-- .body -->
+</div><!-- .slide -->
+</body>
+</html>
