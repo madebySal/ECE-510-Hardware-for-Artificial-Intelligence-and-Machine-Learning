@@ -1,0 +1,11 @@
+# Yosys synthesis script for compute_core (BNN XNOR-popcount)
+# Target: generic cells (no PDK) — for area/logic stats
+
+read_verilog -sv /work/hdl/synth_top.sv
+hierarchy -check -top compute_core
+proc
+flatten
+opt
+synth -top compute_core
+stat
+write_json /work/synth/netlist.json

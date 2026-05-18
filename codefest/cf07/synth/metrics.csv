@@ -1,0 +1,2 @@
+tool,version,design,pdk,library,clock_period_ns,critical_path_ps,slack_ns,total_cells,chip_area_um2,dff_count,combinational_cells,warnings
+yosys,0.36+42,compute_core,sky130A,sky130_fd_sc_hd__tt_025C_1v80,10.0,4498.91,5.501,259,2874.01,2,257,234

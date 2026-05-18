@@ -1,0 +1,14 @@
+# Yosys synthesis with sky130_fd_sc_hd technology mapping
+# Clock: 10 ns (100 MHz) target
+
+read_verilog -sv /work/hdl/synth_top.sv
+hierarchy -check -top compute_core
+proc
+flatten
+opt
+synth -top compute_core -flatten
+dfflibmap -liberty /pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+abc -liberty /pdk/sky130_fd_sc_hd__tt_025C_1v80.lib -constr /work/synth/constraints.sdc
+opt_clean -purge
+stat -liberty /pdk/sky130_fd_sc_hd__tt_025C_1v80.lib
+write_verilog /work/synth/netlist_sky130.v
