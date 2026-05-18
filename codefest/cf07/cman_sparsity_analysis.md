@@ -71,17 +71,26 @@ Set sparse memory = dense memory and solve for s:
 8N²(1-s) + 4(N+1) = 4N²
 ```
  
-For large N, drop the small 4(N+1) term:
+Expand and isolate s:
  
 ```
-8N²(1-s) = 4N²
-8(1-s) = 4
-1-s = 0.5
-s = 0.5
+8N²(1-s) = 4N² - 4(N+1)
+1-s = [4N² - 4(N+1)] / 8N²
+s = 1 - [N² - (N+1)] / 2N²
 ```
  
-**Answer: Breakeven at s = 0.5 (50% sparsity).**  
-Above this sparsity level, CSR format uses less memory than dense storage.
+Substituting N = 512:
+ 
+```
+s = 1 - (262,144 - 513) / (2 × 262,144)
+s = 1 - 261,631 / 524,288
+s ≈ 0.5010
+```
+ 
+**Answer: Breakeven at s ≈ 0.5010 (50.1% sparsity).**  
+Above this sparsity, CSR format uses less memory than dense storage.  
+Note: the result is slightly above 0.5 because the row pointer array adds a fixed
+4(N+1) = 2,052 bytes of overhead to CSR, pushing the breakeven just past 50%.
  
 ---
  
