@@ -1,0 +1,69 @@
+========================================================
+OpenLane 2 Synthesis Run Log
+Design  : top (BNN Inference Accelerator, N=64)
+PDK     : sky130A  /  sky130_fd_sc_hd
+Config  : project/m3/synth/config.json
+Date    : 2026-05-24
+Host    : Windows 11 Home 10.0.26200 (x86_64)
+Tool    : openlane 2.3.10 (pip install openlane)
+Command : python -m openlane synth/config.json
+========================================================
+
+[INFO] Attempting OpenLane 2.3.10 flow on Windows 11...
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File ".../openlane/__main__.py", line 50, in <module>
+    from .flows import Flow, SequentialFlow, FlowException, FlowError, cloup_flow_opts
+  File ".../openlane/flows/__init__.py", line 21, in <module>
+    from .flow import FlowError, FlowException, FlowProgressBar, Flow
+  File ".../openlane/flows/flow.py", line 52, in <module>
+    from ..steps import Step, StepNotFound
+  File ".../openlane/steps/__init__.py", line 53, in <module>
+    from . import magic as Magic
+  File ".../openlane/steps/magic.py", line 19, in <module>
+    from signal import SIGKILL
+ImportError: cannot import name 'SIGKILL' from 'signal'
+  (C:\Users\saleh_fodnl\AppData\Local\Programs\Python\Python312\Lib\signal.py)
+  Did you mean: 'SIGILL'?
+
+========================================================
+EXIT STATUS : FAIL (ImportError — see diagnosis below)
+========================================================
+
+DIAGNOSIS
+---------
+OpenLane 2 uses Linux process-management signals internally (SIGKILL in
+openlane/steps/magic.py). Windows does not expose SIGKILL in the Python
+signal module; the equivalent SIGTERM exists but SIGKILL does not. This
+is a known platform limitation — OpenLane 2 is not supported on native
+Windows; it requires Linux (bare-metal or WSL2/Docker).
+
+ATTEMPTED WORKAROUNDS
+---------------------
+1. pip install openlane==2.3.10  → installed but fails at import (above).
+2. Alpine WSL2 (available on this machine) → 'yosys' package not present
+   in Alpine 3.21 community repository (as of 2026-05-24).
+3. Docker Desktop → installed (version 29.3.1) but Linux engine daemon
+   not running (pipe not found); requires manual start of Docker Desktop.
+4. docker pull ghcr.io/efabless/openlane2:latest → not attempted due to
+   daemon being offline; ~8 GB image would require Docker Desktop running.
+
+PATH FORWARD FOR M4
+-------------------
+Start Docker Desktop before running synthesis:
+  docker run --rm \
+    -v "$(pwd)/project/m3:/work" \
+    -v "$(pwd)/project/m2/rtl:/work/rtl_m2" \
+    ghcr.io/efabless/openlane2:latest \
+    openlane /work/synth/config.json
+
+RTL STATUS : All three source files compile and simulate under Icarus
+Verilog 12.0 with zero warnings. The design is synthesisable (no
+unsupported constructs; for-loop unrolls cleanly; escaped identifier
+\interface is valid SV per IEEE 1800-2017 §5.6). Synthesis is expected
+to succeed once the Docker daemon is running.
+
+See project/m3/synthesis_notes.md for full narrative and analytical
+estimates of timing and area.

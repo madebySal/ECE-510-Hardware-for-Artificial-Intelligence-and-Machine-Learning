@@ -1,0 +1,9 @@
+VCD info: dumpfile cosim.vcd opened for output.
+PASS  all_agree:    out=1 expected=1
+PASS  all_disagree: out=0 expected=0
+PASS  mixed:        out=1 expected=1
+PASS  half_agree:   out=0 expected=0
+----------------------------------------
+ALL PASS  (4/4 tests passed)
+----------------------------------------
+tb/tb_top.sv:262: $finish called at 87766000 (1ps)

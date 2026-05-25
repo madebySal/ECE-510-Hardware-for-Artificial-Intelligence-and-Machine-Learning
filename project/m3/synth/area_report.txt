@@ -1,0 +1,58 @@
+==============================================================
+Area Report — BNN top (N=64)
+Target PDK : sky130A / sky130_fd_sc_hd
+==============================================================
+
+STATUS: Synthesis did not complete on this platform (Windows 11).
+OpenLane 2 requires Linux or Docker. See openlane_run.log and
+synthesis_notes.md for details.
+
+--------------------------------------------------------------
+ANALYTICAL AREA ESTIMATE (from RTL gate count)
+--------------------------------------------------------------
+Module breakdown (N=64, sky130_fd_sc_hd 0.5µm feature size):
+
+  compute_core:
+    64 × XNOR2_1           (xnor_vec)               ~96 cells
+    64 × DFF + MUX         (activation/weight regs)  ~128 cells
+    Adder tree (6 levels):
+      Level 1: 32 × sky130_fd_sc_hd__fa_1           ~32 cells
+      Level 2: 16 × FA                               ~16 cells
+      Level 3-6:  8+4+2+1 = 15 × FA                 ~15 cells
+    7-bit comparator (pop > 32):                      ~20 cells
+    Result DFFs (out, result_valid, pop[6:0]):        ~10 cells
+    subtotal compute_core                            ~317 cells
+
+  \interface (SPI slave + register file):
+    128-byte register file (128 × 8-bit DFF arrays): ~1024 cells
+    2-FF synchronisers (sck, cs_n, mosi × 2 FFs):   ~6 cells
+    SPI FSM (bit_cnt[2:0], byte_idx[6:0],
+             wr_flag, cur_addr[6:0], rx_byte[7:0],
+             tx_byte[7:0], miso):                    ~80 cells
+    Decode + write-path MUX trees:                   ~100 cells
+    subtotal \interface                             ~1210 cells
+
+  top (glue wiring only):                             ~0 cells
+
+  TOTAL estimated cell count                        ~1527 cells
+
+Estimated total cell area (sky130_fd_sc_hd, ~0.5 µm²/cell average):
+  ~1527 × 0.5 µm² ≈ 763 µm²  (≈ 28 µm × 28 µm die area)
+
+Cell type breakdown (estimated):
+  DFF / register elements   ~1218 cells  (80%)  — dominated by regfile
+  Combinational (XNOR/AND)   ~200 cells  (13%)
+  Adder / FA cells             ~63 cells   (4%)
+  Other (MUX, BUF, INV)        ~46 cells   (3%)
+
+For N=784 production design:
+  compute_core scales linearly: ~317 × (784/64) = ~3880 cells
+  \interface register file: 128-byte = 1024 cells (unchanged, regfile fixed)
+  \interface SPI FSM: unchanged
+  Total N=784: ~5090 cells ≈ 2545 µm²
+
+--------------------------------------------------------------
+NOTE: These are analytical estimates only. Actual Yosys technology
+mapping will differ. Update with real area report when Docker-based
+synthesis runs in M4.
+--------------------------------------------------------------

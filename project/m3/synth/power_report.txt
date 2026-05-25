@@ -1,0 +1,51 @@
+==============================================================
+Power Report — BNN top (N=64)
+Target PDK : sky130A / sky130_fd_sc_hd
+==============================================================
+
+STATUS: Power estimation attempted via OpenLane 2 pip (v2.3.10) on
+Windows 11. The tool failed to launch with the following error:
+
+  ImportError: cannot import name 'SIGKILL' from 'signal'
+  (openlane/steps/magic.py line 19)
+
+OpenLane 2's power estimation flow (OpenSTA + Joules or Icarus-based
+toggle-rate annotation) requires Linux. This run could not proceed past
+the import stage. Full error in synth/openlane_run.log.
+
+--------------------------------------------------------------
+ANALYTICAL POWER ESTIMATE
+--------------------------------------------------------------
+Using standard CMOS dynamic power formula:
+  P_dyn = α × C_load × V_dd² × f_clk
+
+Parameters (sky130_fd_sc_hd typical corner):
+  α (activity factor)  : 0.10  (BNN — sparse toggling during compute)
+  C_load per cell      : ~5 fF (sky130_fd_sc_hd standard cell)
+  V_dd                 : 1.8 V
+  f_clk                : 100 MHz
+  Cell count           : ~1527 (see area_report.txt)
+
+P_dyn = 0.10 × (1527 × 5e-15) × (1.8)² × 100e6
+      = 0.10 × 7.635e-12 × 3.24 × 1e8
+      ≈ 0.247 mW
+
+Static leakage (sky130_fd_sc_hd, ~1 nW/cell at 25°C):
+  P_leak = 1527 × 1e-9 ≈ 1.5 µW
+
+Estimated total power (N=64 @ 100 MHz): ~0.25 mW
+
+For N=784 production design:
+  P_dyn scales with cell count: ~0.25 × (5090/1527) ≈ 0.83 mW
+
+--------------------------------------------------------------
+PATH FORWARD FOR M4
+--------------------------------------------------------------
+To obtain a real power report:
+1. Start Docker Desktop on Windows.
+2. Pull ghcr.io/efabless/openlane2:latest.
+3. Run the full flow including Yosys synthesis + OpenSTA.
+4. OpenLane 2 invokes OpenSTA's power estimation using VCD toggle
+   rates or constant activity factors. The cosim.vcd generated in
+   project/m3/sim/ can be used as the toggle-rate input.
+--------------------------------------------------------------

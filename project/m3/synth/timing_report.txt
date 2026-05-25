@@ -1,0 +1,46 @@
+==============================================================
+Timing Report — BNN top (N=64)
+Target PDK : sky130A / sky130_fd_sc_hd
+Clock      : clk, period = 10.000 ns (100 MHz)
+==============================================================
+
+STATUS: Synthesis did not complete on this platform (Windows 11).
+OpenLane 2 requires Linux or Docker. See openlane_run.log and
+synthesis_notes.md for details.
+
+--------------------------------------------------------------
+ANALYTICAL TIMING ESTIMATE (from RTL analysis)
+--------------------------------------------------------------
+The critical path runs from the registered weight_row / activation
+buses through the combinational XNOR-popcount cone to the out and
+result_valid flip-flops in compute_core.
+
+Stage-by-stage estimate (sky130_fd_sc_hd typical corner, 1.8 V, 25 °C):
+
+  1. Clock-to-Q delay (activation/weight_row DFF)     ~0.20 ns
+  2. XNOR2 gate (per bit, 64 parallel)                ~0.15 ns
+  3. Adder tree level 1: 32 × FA  (64→32 partial sums) ~0.50 ns
+  4. Adder tree level 2: 16 × FA  (32→16)              ~0.50 ns
+  5. Adder tree level 3:  8 × FA  (16→8)               ~0.50 ns
+  6. Adder tree level 4:  4 × FA  (8→4)                ~0.50 ns
+  7. Adder tree level 5:  2 × FA  (4→2)                ~0.50 ns
+  8. Adder tree level 6:  1 × FA  (2→1 7-bit result)   ~0.50 ns
+  9. Comparator: (pop > 32) — 7-bit unsigned compare   ~0.40 ns
+ 10. D flip-flop setup time (out register)             ~0.10 ns
+                                               ─────────────
+     Estimated critical path total               ~3.85 ns
+
+Estimated worst-case negative slack (WNS):
+  WNS = 10.000 - 3.850 = +6.15 ns   (POSITIVE — timing met)
+
+Estimated clock frequency achievable: ~260 MHz
+  (limited by popcount adder tree, not SPI or register file)
+
+Hold slack is positive by construction (single-cycle path, same clock).
+
+--------------------------------------------------------------
+NOTE: These are analytical estimates only. Actual synthesis under
+OpenLane 2 / Yosys may differ due to technology mapping, net
+routing, and clock tree insertion. Update with real STA output
+when Docker-based synthesis is run in M4.
+--------------------------------------------------------------
