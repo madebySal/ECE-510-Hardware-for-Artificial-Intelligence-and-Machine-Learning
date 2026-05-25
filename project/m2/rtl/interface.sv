@@ -97,7 +97,7 @@ module \interface #(
             act_out        <= '0;
             wgt_out        <= '0;
             cs_active_prev <= 1'b0;
-            for (int i = 0; i < 128; i++) regfile[i] <= 8'b0;
+            for (int i = 0; i < 128; i++) regfile[i] = 8'b0;  // blocking OK in reset path
         end else begin
             compute_start  <= 1'b0;
             cs_active_prev <= cs_active;
