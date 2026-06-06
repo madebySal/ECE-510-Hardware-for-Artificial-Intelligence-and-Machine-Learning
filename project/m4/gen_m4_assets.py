@@ -684,6 +684,11 @@ def gen_pdf():
         P('The accelerator\'s advantage is power: 9.22 mW vs ~50 W (5,420×), yielding '
           '56× lower energy per full MNIST inference. For an edge deployment where battery '
           'life dominates over latency, this trade-off is the correct one.'),
+        P('<b>Raw data:</b> All numbers in this section are derived from measurements recorded '
+          'in <i>project/m4/bench/benchmark_data.csv</i>. SW baseline timing from '
+          '<i>project/m1/sw_baseline.md</i> (re-run, 50 samples). HW timing from '
+          '<i>project/m4/sim/final_run.log</i> and power from '
+          '<i>project/m4/synth/power_report.txt</i>.'),
         SP(4),
     ]
 
