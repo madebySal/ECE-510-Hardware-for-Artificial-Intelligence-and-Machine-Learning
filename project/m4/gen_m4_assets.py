@@ -604,11 +604,11 @@ def gen_pdf():
         P('The final testbench drives the top-level DUT exclusively through the SPI interface '
           '(no internal signal probing). Four test vectors cover the critical cases:'),
         tbl([['Test','Activation','Weight','Expected out','Result'],
-             ['all_agree','0xFF×8','0xFF×8','1 (pop=64 > 32)','PASS'],
-             ['all_disagree','0xFF×8','0x00×8','0 (pop=0 < 32)','PASS'],
-             ['mixed_pattern','0xAA×8','0x55×8','0 (pop=32, not > 32)','PASS'],
-             ['half_agree','0xF0×8','0x0F×8','0 (pop=32, not > 32)','PASS']],
-            col_widths=[1.2*inch, 1.5*inch, 1.4*inch, 2.1*inch, 0.9*inch]),
+             ['all_agree','0xFFFF…FF (64 ones)','0xFFFF…FF (64 ones)','1 (pop=64 > 32)','PASS'],
+             ['all_disagree','0xFFFF…FF (64 ones)','0x0000…00 (64 zeros)','0 (pop=0 < 32)','PASS'],
+             ['mixed','0xAAAA…AA','0xAAAA…AA (same)','1 (pop=64 > 32)','PASS'],
+             ['half_agree','0xFFFFFFFF_00000000','0xFFFF…FF (all ones)','0 (pop=32, not > 32)','PASS']],
+            col_widths=[1.1*inch, 1.8*inch, 1.8*inch, 1.7*inch, 0.7*inch]),
         SP(6),
         P('All 4 tests PASS. The simulation log is at project/m4/sim/final_run.log. '
           'The testbench uses an independent ref_bnn() task implemented without calling '
