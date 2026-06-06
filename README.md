@@ -1,5 +1,24 @@
-# ECE-510-Hardware-for-Artificial-Intelligence-and-Machine-Learning
+# BNN Inference Accelerator — ECE 510 Spring 2026
+
 Course repository for ECE 510 – Hardware for AI and Machine Learning at Portland State University.
+
+---
+
+## Milestone 4 Submission
+
+**M4 deliverables:** [`project/m4/`](project/m4/)
+**Design justification report (PDF):** [`project/m4/report/design_justification.pdf`](project/m4/report/design_justification.pdf)
+**M4 file catalog:** [`project/m4/README.md`](project/m4/README.md)
+
+| Metric | Value |
+|--------|-------|
+| Technology | sky130A / sky130_fd_sc_hd |
+| Clock | 100 MHz |
+| Setup WNS (nom tt 25°C 1.8V) | +4.165 ns ✓ |
+| Total cells | 5,772 — Die area: 67,353 µm² |
+| Power | 9.22 mW |
+| Energy / MNIST inference | ~102 µJ (56× better than CPU baseline) |
+| Simulation | 4/4 PASS (Icarus Verilog co-simulation) |
 
 ---
 

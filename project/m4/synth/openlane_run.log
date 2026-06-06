@@ -1,0 +1,84 @@
+========================================================
+OpenLane 2 Synthesis Run Log
+Design  : top (BNN Inference Accelerator, N=64)
+PDK     : sky130A / sky130_fd_sc_hd
+Config  : project/m3/synth/config.json
+Date    : 2026-05-24
+Host    : Docker container (ghcr.io/efabless/openlane2:2.3.10)
+         on Windows 11 Home 10.0.26200 (Docker Desktop 29.3.1)
+Command : python3 -m openlane --run-tag m3_synth --design-dir /m3/synth
+          -f Classic --to OpenROAD.STAPostPNR /m3/synth/config.json
+Flow    : Classic (Verilator lint → Yosys synth → OpenROAD P&R → OpenSTA)
+Runtime : 21 minutes 31 seconds
+========================================================
+
+FIRST ATTEMPT — FAILED (Windows native, pip install openlane 2.3.10)
+---------------------------------------------------------------------
+ImportError: cannot import name 'SIGKILL' from 'signal'
+  (openlane/steps/magic.py line 19)
+Fix applied: switched to Docker container execution.
+
+RTL FIXES REQUIRED BEFORE SYNTHESIS SUCCEEDED
+----------------------------------------------
+1. compute_core.sv: Replaced 'function automatic ... return acc' with
+   direct $countones() assignment. Yosys does not support 'return'
+   statements in synthesisable functions.
+2. interface.sv: Changed non-blocking '<=' to blocking '=' on the
+   reset-path array initialisation loop. Verilator rejects non-blocking
+   assignments to unpacked arrays inside for-loops.
+Both fixes are functionally equivalent; iverilog simulation still passes
+4/4 tests after both changes.
+
+FLOW RESULT: SUCCESS (exit code 0)
+------------------------------------
+Classic - Stage 78 - Report Manufacturability  78/78  0:21:31
+Flow complete.
+
+WARNINGS (non-fatal)
+--------------------
+[Checker.LintWarnings]         444 TIMESCALEMOD warnings (sky130 cell
+                                   library cells missing timescale vs
+                                   our RTL — benign, expected)
+[OpenROAD.CheckSDCFiles]       PNR_SDC_FILE / SIGNOFF_SDC_FILE not
+                                   defined; generic fallback SDC used
+[OpenROAD.ResizerTiming]       Unable to repair all setup violations
+                                   (slow corner ss 100C 1v60)
+[OpenROAD.DetailedRouting]     Large net _01201_ has 163 pins (mosi_s1
+                                   high-fanout; mitigated by buf_12 ×2)
+
+SYNTHESIS RESULTS SUMMARY
+--------------------------
+Yosys cell count (post-techmap)  :  5,772 cells
+  Sequential (dfxtp_2)           :  1,196
+  Combinational + other          :  4,576
+Chip area (OpenROAD floorplan)   :  67,353.35 µm²  (≈ 260 µm² die)
+Die bbox                         :  397.9 × 408.6 µm
+Core utilisation                 :  45.1%
+
+Post-PNR STA (nom_tt_025C_1v80)
+  Setup WNS                      : +4.165 ns  (PASSING)
+  Setup TNS                      :  0.000 ns  (no violations)
+  Hold WNS                       : +0.436 ns  (PASSING)
+
+Post-PNR STA (max_ss_100C_1v60 — worst corner)
+  Setup WNS                      : -1.915 ns  (FAILING — 27 paths)
+  Setup TNS                      : -13.573 ns
+  Hold WNS                       : +0.908 ns  (PASSING)
+
+Power (nom_tt_025C_1v80)
+  Sequential                     :  4.760 mW  (51.6%)
+  Clock                          :  4.192 mW  (45.5%)
+  Combinational                  :  0.264 mW  ( 2.9%)
+  Total                          :  9.216 mW
+
+Critical path: u_interface.mosi_s1 FF → regfile write-enable decode
+  tree (9 logic levels: buf×2 → or4bb → nor2 → a22o → a221o → or4×3
+  → a221o → o221a) → regfile DFF setup.
+  Arrival = 6.530 ns, Required = 10.696 ns, Slack = +4.165 ns.
+
+Full reports: project/m3/synth/timing_report.txt
+              project/m3/synth/area_report.txt
+              project/m3/synth/power_report.txt
+              project/m3/synth/critical_path.md
+Run artefacts: project/m3/synth/runs/m3_synth/
+========================================================

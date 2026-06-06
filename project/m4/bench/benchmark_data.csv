@@ -1,0 +1,13 @@
+metric,sw_baseline,hw_accelerator_measured,hw_full_mnist_projected,unit,source
+time_per_inference,114.40,14.41,46000,us,M1 re-run / M3 co-sim / projection
+throughput,8741,69396,22,samples_per_sec,M1 re-run / M3 co-sim / projection
+compute_throughput_gops,4.10,0.00888,,GOPS,M1 re-run / M3 co-sim
+peak_compute_gops,4.10,12.8,,GOPS,measured / M3 synthesis
+compute_utilization_pct,100,0.069,,pct,co-sim vs peak
+power_w,50,0.00922,,W,estimated socket / M3 OpenSTA
+energy_per_inference_uj,5720,0.133,102,uJ,power x time
+memory_bytes,8192,128,,bytes,RSS / on-chip regfile
+ai_lower_bound_flops_per_byte,8,8,8,FLOPs/byte,CF09 analysis
+ai_upper_bound_flops_per_byte,16,16,16,FLOPs/byte,CF09 analysis
+speedup_vs_sw_latency,1.0,0.0025,0.0025,x,M1/HW time ratio
+energy_efficiency_ratio,1.0,56.1,56.1,x,SW/HW energy ratio
