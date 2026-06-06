@@ -10,6 +10,10 @@ implemented on sky130A / sky130_fd_sc_hd at 100 MHz.
 
 ## File Catalog
 
+| File | Description | Checklist |
+|------|-------------|-----------|
+| `README.md` (this file) | Catalogs all M4 files with descriptions and checklist references | §1 README |
+
 ### RTL — `rtl/`
 | File | Description | Checklist |
 |------|-------------|-----------|
